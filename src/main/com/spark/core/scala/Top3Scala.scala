@@ -11,7 +11,8 @@ object Top3Scala {
     val conf=new SparkConf().setAppName("Top3Scala").setMaster("local")
     val sc=new SparkContext(conf)
     val rdd=sc.textFile("c:\\spark\\top.txt",1)
-    rdd.map(w=>(w,w)).sortByKey(false,1).take(3).foreach(w=>println(w._2))
+//    rdd.map(w=>(w,w)).sortByKey(false,1).take(3).foreach(w=>println(w._2))
+    rdd.map(w=>(w.toInt,w)).sortByKey(false,1).take(3).map(w=>w._2).foreach(println)
 
   }
 }
