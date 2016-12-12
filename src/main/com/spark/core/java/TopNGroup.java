@@ -17,7 +17,7 @@ import java.util.Iterator;
 public class TopNGroup {
     public static void main(String[] args) {
         SparkConf conf = new SparkConf().setAppName("").setMaster("local");
-        final JavaSparkContext sc = new JavaSparkContext(conf);
+        JavaSparkContext sc = new JavaSparkContext(conf);
 
         JavaRDD<String> rdd = sc.textFile("c:\\spark\\score.txt", 1);
 
