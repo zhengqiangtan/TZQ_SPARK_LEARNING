@@ -370,6 +370,10 @@ public class JavaAPISuite implements Serializable {
         Assert.assertEquals(2, Iterables.size(categories.groupByKey().lookup("Oranges").get(0)));
     }
 
+    /**
+     * groupBy(function)
+       function返回key，传入的RDD的各个元素根据这个key进行分组
+     */
     @Test
     public void groupBy() {
         JavaRDD<Integer> rdd = sc.parallelize(Arrays.asList(1, 1, 2, 3, 5, 8, 13));
@@ -412,9 +416,11 @@ public class JavaAPISuite implements Serializable {
                 };
         JavaPairRDD<Integer, Integer> pairRDD = rdd.zip(rdd);
         System.out.println("collect: "+pairRDD.collect());
+        //collect: [(1,1), (1,1), (2,2), (3,3), (5,5), (8,8), (13,13)]
 
         JavaPairRDD<Boolean, Iterable<Tuple2<Integer, Integer>>> oddsAndEvens = pairRDD.groupBy(areOdd);
         Assert.assertEquals(2, oddsAndEvens.count());
+        System.out.println("oddsAndEvens.count() :"+oddsAndEvens.count());
         Assert.assertEquals(2, Iterables.size(oddsAndEvens.lookup(true).get(0)));  // Evens
         Assert.assertEquals(5, Iterables.size(oddsAndEvens.lookup(false).get(0))); // Odds
 
@@ -424,147 +430,172 @@ public class JavaAPISuite implements Serializable {
         Assert.assertEquals(5, Iterables.size(oddsAndEvens.lookup(false).get(0))); // Odds
     }
 
-//    @SuppressWarnings("unchecked")
-//    @Test
-//    public void keyByOnPairRDD() {
-//        // Regression test for SPARK-4459
-//        JavaRDD<Integer> rdd = sc.parallelize(Arrays.asList(1, 1, 2, 3, 5, 8, 13));
-//        Function<Tuple2<Integer, Integer>, String> sumToString =
-//                new Function<Tuple2<Integer, Integer>, String>() {
-//                    @Override
-//                    public String call(Tuple2<Integer, Integer> x) {
-//                        return String.valueOf(x._1() + x._2());
-//                    }
-//                };
-//        JavaPairRDD<Integer, Integer> pairRDD = rdd.zip(rdd);
-//        JavaPairRDD<String, Tuple2<Integer, Integer>> keyed = pairRDD.keyBy(sumToString);
-//        Assert.assertEquals(7, keyed.count());
-//        Assert.assertEquals(1, (long) keyed.lookup("2").get(0)._1());
-//    }
-//
-//    @SuppressWarnings("unchecked")
-//    @Test
-//    public void cogroup() {
-//        JavaPairRDD<String, String> categories = sc.parallelizePairs(Arrays.asList(
-//                new Tuple2<>("Apples", "Fruit"),
-//                new Tuple2<>("Oranges", "Fruit"),
-//                new Tuple2<>("Oranges", "Citrus")
-//        ));
-//        JavaPairRDD<String, Integer> prices = sc.parallelizePairs(Arrays.asList(
-//                new Tuple2<>("Oranges", 2),
-//                new Tuple2<>("Apples", 3)
-//        ));
-//        JavaPairRDD<String, Tuple2<Iterable<String>, Iterable<Integer>>> cogrouped =
-//                categories.cogroup(prices);
-//        Assert.assertEquals("[Fruit, Citrus]", Iterables.toString(cogrouped.lookup("Oranges").get(0)._1()));
-//        Assert.assertEquals("[2]", Iterables.toString(cogrouped.lookup("Oranges").get(0)._2()));
-//
-//        cogrouped.collect();
-//    }
-//
-//    @SuppressWarnings("unchecked")
-//    @Test
-//    public void cogroup3() {
-//        JavaPairRDD<String, String> categories = sc.parallelizePairs(Arrays.asList(
-//                new Tuple2<>("Apples", "Fruit"),
-//                new Tuple2<>("Oranges", "Fruit"),
-//                new Tuple2<>("Oranges", "Citrus")
-//        ));
-//        JavaPairRDD<String, Integer> prices = sc.parallelizePairs(Arrays.asList(
-//                new Tuple2<>("Oranges", 2),
-//                new Tuple2<>("Apples", 3)
-//        ));
-//        JavaPairRDD<String, Integer> quantities = sc.parallelizePairs(Arrays.asList(
-//                new Tuple2<>("Oranges", 21),
-//                new Tuple2<>("Apples", 42)
-//        ));
-//
-//        JavaPairRDD<String, Tuple3<Iterable<String>, Iterable<Integer>, Iterable<Integer>>> cogrouped =
-//                categories.cogroup(prices, quantities);
-//        Assert.assertEquals("[Fruit, Citrus]", Iterables.toString(cogrouped.lookup("Oranges").get(0)._1()));
-//        Assert.assertEquals("[2]", Iterables.toString(cogrouped.lookup("Oranges").get(0)._2()));
-//        Assert.assertEquals("[42]", Iterables.toString(cogrouped.lookup("Apples").get(0)._3()));
-//
-//
-//        cogrouped.collect();
-//    }
-//
-//    @SuppressWarnings("unchecked")
-//    @Test
-//    public void cogroup4() {
-//        JavaPairRDD<String, String> categories = sc.parallelizePairs(Arrays.asList(
-//                new Tuple2<>("Apples", "Fruit"),
-//                new Tuple2<>("Oranges", "Fruit"),
-//                new Tuple2<>("Oranges", "Citrus")
-//        ));
-//        JavaPairRDD<String, Integer> prices = sc.parallelizePairs(Arrays.asList(
-//                new Tuple2<>("Oranges", 2),
-//                new Tuple2<>("Apples", 3)
-//        ));
-//        JavaPairRDD<String, Integer> quantities = sc.parallelizePairs(Arrays.asList(
-//                new Tuple2<>("Oranges", 21),
-//                new Tuple2<>("Apples", 42)
-//        ));
-//        JavaPairRDD<String, String> countries = sc.parallelizePairs(Arrays.asList(
-//                new Tuple2<>("Oranges", "BR"),
-//                new Tuple2<>("Apples", "US")
-//        ));
-//
-//        JavaPairRDD<String, Tuple4<Iterable<String>, Iterable<Integer>, Iterable<Integer>, Iterable<String>>> cogrouped =
-//                categories.cogroup(prices, quantities, countries);
-//        Assert.assertEquals("[Fruit, Citrus]", Iterables.toString(cogrouped.lookup("Oranges").get(0)._1()));
-//        Assert.assertEquals("[2]", Iterables.toString(cogrouped.lookup("Oranges").get(0)._2()));
-//        Assert.assertEquals("[42]", Iterables.toString(cogrouped.lookup("Apples").get(0)._3()));
-//        Assert.assertEquals("[BR]", Iterables.toString(cogrouped.lookup("Oranges").get(0)._4()));
-//
-//        cogrouped.collect();
-//    }
-//
-//    @SuppressWarnings("unchecked")
-//    @Test
-//    public void leftOuterJoin() {
-//        JavaPairRDD<Integer, Integer> rdd1 = sc.parallelizePairs(Arrays.asList(
-//                new Tuple2<>(1, 1),
-//                new Tuple2<>(1, 2),
-//                new Tuple2<>(2, 1),
-//                new Tuple2<>(3, 1)
-//        ));
-//        JavaPairRDD<Integer, Character> rdd2 = sc.parallelizePairs(Arrays.asList(
-//                new Tuple2<>(1, 'x'),
-//                new Tuple2<>(2, 'y'),
-//                new Tuple2<>(2, 'z'),
-//                new Tuple2<>(4, 'w')
-//        ));
-//        List<Tuple2<Integer,Tuple2<Integer,Optional<Character>>>> joined =
-//                rdd1.leftOuterJoin(rdd2).collect();
-//        Assert.assertEquals(5, joined.size());
-//        Tuple2<Integer,Tuple2<Integer,Optional<Character>>> firstUnmatched =
-//                rdd1.leftOuterJoin(rdd2).filter(
-//                        new Function<Tuple2<Integer, Tuple2<Integer, Optional<Character>>>, Boolean>() {
-//                            @Override
-//                            public Boolean call(Tuple2<Integer, Tuple2<Integer, Optional<Character>>> tup) {
-//                                return !tup._2()._2().isPresent();
-//                            }
-//                        }).first();
-//        Assert.assertEquals(3, firstUnmatched._1().intValue());
-//    }
-//
-//    @Test
-//    public void foldReduce() {
-//        JavaRDD<Integer> rdd = sc.parallelize(Arrays.asList(1, 1, 2, 3, 5, 8, 13));
-//        Function2<Integer, Integer, Integer> add = new Function2<Integer, Integer, Integer>() {
-//            @Override
-//            public Integer call(Integer a, Integer b) {
-//                return a + b;
-//            }
-//        };
-//
-//        int sum = rdd.fold(0, add);
-//        Assert.assertEquals(33, sum);
-//
-//        sum = rdd.reduce(add);
-//        Assert.assertEquals(33, sum);
-//    }
+    @SuppressWarnings("unchecked")
+    @Test
+    public void keyByOnPairRDD() {
+        // Regression test for SPARK-4459
+        JavaRDD<Integer> rdd = sc.parallelize(Arrays.asList(1, 1, 2, 3, 5, 8, 13));
+        Function<Tuple2<Integer, Integer>, String> sumToString =
+                new Function<Tuple2<Integer, Integer>, String>() {
+                    @Override
+                    public String call(Tuple2<Integer, Integer> x) {
+                        return String.valueOf(x._1() + x._2());//一组里面求和
+                    }
+                };
+        JavaPairRDD<Integer, Integer> pairRDD = rdd.zip(rdd);
+        System.out.println(" pairRDD :"+pairRDD.collect());
+        // pairRDD :[(1,1), (1,1), (2,2), (3,3), (5,5), (8,8), (13,13)]
+        JavaPairRDD<String, Tuple2<Integer, Integer>> keyed = pairRDD.keyBy(sumToString);//加上KEY(key已经和)
+        System.out.println("keyed:"+keyed.collect());
+        //keyed:[(2,(1,1)), (2,(1,1)), (4,(2,2)), (6,(3,3)), (10,(5,5)), (16,(8,8)), (26,(13,13))]
+
+        Assert.assertEquals(7, keyed.count());
+        Assert.assertEquals(1, (long) keyed.lookup("2").get(0)._1());
+        System.out.println("keyed.lookup(\"2\")="+keyed.lookup("2"));
+        //keyed.lookup("2")=[(1,1), (1,1)]
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void cogroup() {
+        JavaPairRDD<String, String> categories = sc.parallelizePairs(Arrays.asList(
+                new Tuple2<String, String>("Apples", "Fruit"),
+                new Tuple2<String, String>("Oranges", "Fruit"),
+                new Tuple2<String, String>("Oranges", "Citrus")
+        ));
+        JavaPairRDD<String, Integer> prices = sc.parallelizePairs(Arrays.asList(
+                new Tuple2<String, Integer>("Oranges", 2),
+                new Tuple2<String, Integer>("Apples", 3)
+        ));
+        JavaPairRDD<String, Tuple2<Iterable<String>, Iterable<Integer>>> cogrouped = categories.cogroup(prices);
+        System.out.println("cogrouped.collect()="+cogrouped.collect());
+        //cogrouped.collect()=[(Oranges,([Fruit, Citrus],[2])), (Apples,([Fruit],[3]))]
+
+        Assert.assertEquals("[Fruit, Citrus]", Iterables.toString(cogrouped.lookup("Oranges").get(0)._1()));
+        Assert.assertEquals("[2]", Iterables.toString(cogrouped.lookup("Oranges").get(0)._2()));
+
+
+        System.out.println("-->"+Iterables.toString(cogrouped.lookup("Oranges")));//-->[([Fruit, Citrus],[2])]
+        System.out.println("==>"+Iterables.toString(cogrouped.lookup("Oranges").get(0)._1()));
+        Tuple2<Iterable<String>, Iterable<Integer>> oranges = cogrouped.lookup("Oranges").get(0);
+        System.out.println("oranges:"+oranges); //oranges:([Fruit, Citrus],[2])
+
+    }
+
+    @Test
+    public void cogroup3() {
+        JavaPairRDD<String, String> categories = sc.parallelizePairs(Arrays.asList(
+                new Tuple2<String, String>("Apples", "Fruit"),
+                new Tuple2<String, String>("Oranges", "Fruit"),
+                new Tuple2<String, String>("Oranges", "Citrus")
+        ));
+        System.out.println("categories:"+categories);
+        JavaPairRDD<String, Integer> prices = sc.parallelizePairs(Arrays.asList(
+                new Tuple2<String, Integer>("Oranges", 2),
+                new Tuple2<String, Integer>("Apples", 3)
+        ));
+        System.out.println("prices:"+prices);
+        JavaPairRDD<String, Integer> quantities = sc.parallelizePairs(Arrays.asList(
+                new Tuple2<String, Integer>("Oranges", 21),
+                new Tuple2<String, Integer>("Apples", 42)
+        ));
+        System.out.println("quantities:"+quantities);
+        JavaPairRDD<String, Tuple3<Iterable<String>, Iterable<Integer>, Iterable<Integer>>> cogrouped =
+                categories.cogroup(prices, quantities);
+        System.out.println("cogrouped:"+cogrouped.collect());
+        //cogrouped:[(Oranges,([Fruit, Citrus],[2],[21])), (Apples,([Fruit],[3],[42]))]
+
+        Assert.assertEquals("[Fruit, Citrus]", Iterables.toString(cogrouped.lookup("Oranges").get(0)._1()));
+        System.out.println("cogrouped.lookup(\"Oranges\").get(0)._1="+cogrouped.lookup("Oranges").get(0)._1());
+
+        Assert.assertEquals("[2]", Iterables.toString(cogrouped.lookup("Oranges").get(0)._2()));
+        Assert.assertEquals("[42]", Iterables.toString(cogrouped.lookup("Apples").get(0)._3()));
+
+        System.out.println("cogrouped.lookup(\"Apples\").get(0)="+cogrouped.lookup("Apples").get(0));
+
+
+        cogrouped.collect();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void cogroup4() {
+        JavaPairRDD<String, String> categories = sc.parallelizePairs(Arrays.asList(
+                new Tuple2<String, String>("Apples", "Fruit"),
+                new Tuple2<String, String>("Oranges", "Fruit"),
+                new Tuple2<String, String>("Oranges", "Citrus")
+        ));
+        JavaPairRDD<String, Integer> prices = sc.parallelizePairs(Arrays.asList(
+                new Tuple2<String, Integer>("Oranges", 2),
+                new Tuple2<String, Integer>("Apples", 3)
+        ));
+        JavaPairRDD<String, Integer> quantities = sc.parallelizePairs(Arrays.asList(
+                new Tuple2<String, Integer>("Oranges", 21),
+                new Tuple2<String, Integer>("Apples", 42)
+        ));
+        JavaPairRDD<String, String> countries = sc.parallelizePairs(Arrays.asList(
+                new Tuple2<String, String>("Oranges", "BR"),
+                new Tuple2<String, String>("Apples", "US")
+        ));
+
+        JavaPairRDD<String, Tuple4<Iterable<String>, Iterable<Integer>, Iterable<Integer>, Iterable<String>>> cogrouped =
+                categories.cogroup(prices, quantities, countries);
+        Assert.assertEquals("[Fruit, Citrus]", Iterables.toString(cogrouped.lookup("Oranges").get(0)._1()));
+        Assert.assertEquals("[2]", Iterables.toString(cogrouped.lookup("Oranges").get(0)._2()));
+        Assert.assertEquals("[42]", Iterables.toString(cogrouped.lookup("Apples").get(0)._3()));
+        Assert.assertEquals("[BR]", Iterables.toString(cogrouped.lookup("Oranges").get(0)._4()));
+
+        cogrouped.collect();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void leftOuterJoin() {
+        JavaPairRDD<Integer, Integer> rdd1 = sc.parallelizePairs(Arrays.asList(
+                new Tuple2<Integer, Integer>(1, 1),
+                new Tuple2<Integer, Integer>(1, 2),
+                new Tuple2<Integer, Integer>(2, 1),
+                new Tuple2<Integer, Integer>(3, 1)
+        ));
+        JavaPairRDD<Integer, Character> rdd2 = sc.parallelizePairs(Arrays.asList(
+                new Tuple2<Integer, Character>(1, 'x'),
+                new Tuple2<Integer, Character>(2, 'y'),
+                new Tuple2<Integer, Character>(2, 'z'),
+                new Tuple2<Integer, Character>(4, 'w')
+        ));
+        List<Tuple2<Integer,Tuple2<Integer,Optional<Character>>>> joined = rdd1.leftOuterJoin(rdd2).collect();
+        Assert.assertEquals(5, joined.size());
+        System.out.println("joined.size()="+joined.size());
+
+        Tuple2<Integer,Tuple2<Integer,Optional<Character>>> firstUnmatched =
+                rdd1.leftOuterJoin(rdd2).filter(
+                        new Function<Tuple2<Integer, Tuple2<Integer, Optional<Character>>>, Boolean>() {
+                            @Override
+                            public Boolean call(Tuple2<Integer, Tuple2<Integer, Optional<Character>>> tup) {
+                                return !tup._2()._2().isPresent();
+                            }
+                        }).first();
+        System.out.println("firstUnmatched="+firstUnmatched);//firstUnmatched=(3,(1,Optional.absent()))
+
+        Assert.assertEquals(3, firstUnmatched._1().intValue());
+    }
+
+    @Test
+    public void foldReduce() {
+        JavaRDD<Integer> rdd = sc.parallelize(Arrays.asList(1, 1, 2, 3, 5, 8, 13));
+        Function2<Integer, Integer, Integer> add = new Function2<Integer, Integer, Integer>() {
+            @Override
+            public Integer call(Integer a, Integer b) {
+                return a + b;
+            }
+        };
+
+        int sum = rdd.fold(0, add);
+        Assert.assertEquals(33, sum);
+
+        sum = rdd.reduce(add);
+        Assert.assertEquals(33, sum);
+    }
 //
 //    @Test
 //    public void treeReduce() {
