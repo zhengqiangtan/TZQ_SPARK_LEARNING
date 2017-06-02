@@ -7,9 +7,10 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.api.java.function.VoidFunction;
 import scala.Tuple2;
-import scala.actors.threadpool.Arrays;
 
+import java.util.Arrays;
 import java.util.Iterator;
+
 
 /**
  * Created by TZQ on 2016/12/9.
